@@ -1,0 +1,22 @@
+{
+  "name": "orbiter-bridge",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^5.2.0",
+    "console-stamp": "^3.1.1",
+    "dotenv": "^16.0.3",
+    "fs": "^0.0.1-security",
+    "mathjs": "^11.8.0",
+    "readline-sync": "^1.4.10",
+    "web3": "^1.10.0"
+  }
+}
