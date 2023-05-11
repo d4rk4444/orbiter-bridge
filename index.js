@@ -33,7 +33,7 @@ const bridgeETHOrbiter = async(fromChain, toChain, privateKey, toAddress) => {
 
                     let gasLimit = fromChain == 'Arbitrum' ? await getEstimateGas(rpc, '0x', '100000', address) : 21000;
                     gasLimit = fromChain == 'zkSyncEra' ? (await dataSendToken(rpc, info.ETH, orbiter.routerETH, '100000', address)).estimateGas : gasLimit;
-                    gasLimit = toChain == 'Starknet' ? (await bridgeETHToStarknet(rpc, 1 * 10**16, toAddress, address)).estimateGas : gasLimit;
+                    gasLimit = toChain == 'Starknet' ? (await bridgeETHToStarknet(rpc, '100000', toAddress, address)).estimateGas : gasLimit;
                     gasLimit = parseInt(multiply(gasLimit, 1.2));
 
                     const amountFee = parseInt(add(multiply(gasLimit, gasPrice * 10**9), orbiter[toChain].holdFee * 10**18));
@@ -42,7 +42,8 @@ const bridgeETHOrbiter = async(fromChain, toChain, privateKey, toAddress) => {
                     const data = toChain == 'Starknet' ? (await bridgeETHToStarknet(rpc, amountETH, toAddress, address)).encodeABI : null;
                     if (Number(amountETH) > add(orbiter.minAmount, orbiter[toChain].holdFee) * 10**18) {
                         const typeTX = fromChain == 'Optimism' || fromChain == 'BSC' ? 0 : 2;
-                        await sendEVMTX(rpc, typeTX, gasLimit, orbiter.routerETH, amountETH, data, privateKey, gasPrice, gasPrice);
+                        const bridgeOrbiter = toChain == 'Starknet' ? orbiter.routerToken : orbiter.routerETH;
+                        await sendEVMTX(rpc, typeTX, gasLimit, bridgeOrbiter, amountETH, data, privateKey, gasPrice, gasPrice);
                         console.log(chalk.yellow(`Bridge ${parseFloat(amountETH / 10**18).toFixed(4)}ETH ${fromChain} -> ${toChain}`));
                         logger.log(`Bridge ${parseFloat(amountETH / 10**18).toFixed(4)}ETH ${fromChain} -> ${toChain}`);
                         isReady = true;
@@ -67,7 +68,9 @@ const bridgeETHOrbiter = async(fromChain, toChain, privateKey, toAddress) => {
     const mainStage = [
         'ARBITRUM -> zKSYNC ERA',
         'ARBITRUM -> STARKNET',
+        'ARBITRUM -> OPTIMISM',
         'zKSYNC ERA -> ARBITRUM',
+        'OPTIMISM -> ARBITRUM',
     ];
 
     const index = readline.keyInSelect(mainStage, 'Choose stage!');
@@ -87,7 +90,11 @@ const bridgeETHOrbiter = async(fromChain, toChain, privateKey, toAddress) => {
         } else if (index == 1) {
             await bridgeETHOrbiter('Arbitrum', 'Starknet', wallet[i], walletStarknet[i]);
         } else if (index == 2) {
+            await bridgeETHOrbiter('Arbitrum', 'Optimism', wallet[i]);
+        } else if (index == 3) {
             await bridgeETHOrbiter('zkSyncEra', 'Arbitrum', wallet[i]);
+        } else if (index == 4) {
+            await bridgeETHOrbiter('Optimism', 'Arbitrum', wallet[i]);
         }
 
         await timeout(pauseWalletTime);
