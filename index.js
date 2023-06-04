@@ -5,7 +5,7 @@ import { info,
     generateRandomAmount,
     privateToAddress } from './src/other.js';
 import { dataSendToken, getETHAmount, getEstimateGas, getGasPrice, sendEVMTX, toWei } from './src/web3.js';
-import { bridgeETHToStarknet } from './src/starknet.js';
+import { bridgeETHToStarknet, dataBridgeETHFromStarknet, getAmountTokenStark, privateToStarknetAddress, sendStarknetTX } from './src/starknet.js';
 import { subtract, multiply, divide, pow, add, number } from 'mathjs';
 import fs from 'fs';
 import readline from 'readline-sync';
@@ -19,58 +19,69 @@ const logger = new console.Console(output);
 consoleStamp(console, { format: ':date(HH:MM:ss)' });
 consoleStamp(logger, { format: ':date(yyyy/mm/dd HH:MM:ss)', stdout: output });
 
-const bridgeETHOrbiter = async(fromChain, toChain, privateKey, toAddress) => {
-    const address = privateToAddress(privateKey);
-    const random = generateRandomAmount(process.env.PERCENT_BRIDGE_MIN / 100, process.env.PERCENT_BRIDGE_MAX / 100, 3);
+const bridgeETHOrbiter = async(fromChain, toChain, privateKey, privateStarknet) => {
+    try {
+        const address = privateToAddress(privateKey);
+        const addressStark = await privateToStarknetAddress(privateStarknet);
+        const random = generateRandomAmount(process.env.PERCENT_BRIDGE_MIN / 100, process.env.PERCENT_BRIDGE_MAX / 100, 3);
 
-    let isReady;
-    while(!isReady) {
-        try {
-            const rpc = info['rpc' + fromChain];
-            await getETHAmount(rpc, address).then(async(amountETH) => {
+        const rpc = info['rpc' + fromChain];
+
+        let amountETH = fromChain == 'Starknet'
+            ? await getAmountTokenStark(info.rpcStarknet, addressStark, info.Starknet.ETH, info.Starknet.ETHAbi)
+            : await getETHAmount(rpc, address);
+
+        const data = toChain == 'Starknet'
+            ? (await bridgeETHToStarknet(rpc, amountETH, await privateToStarknetAddress(privateStarknet), address)).encodeABI
+            : null;
+
+        let gasLimit = fromChain == 'Arbitrum' || fromChain == 'ArbitrumNova' ? await getEstimateGas(rpc, data, '100000', address, orbiter.routerETH)
+            : fromChain == 'zkSyncEra' ? (await dataSendToken(rpc, info.ETH, orbiter.routerETH, '100000', address)).estimateGas
+            : toChain == 'Starknet' ? (await bridgeETHToStarknet(rpc, '100000', await privateToStarknetAddress(privateStarknet), address)).estimateGas
+            : 21000;
+
+        const amountFee = fromChain == 'Starknet'
+            ? 0.00025 * 10**18
+            : parseInt(add(multiply(gasLimit, gasPrice * 10**9), orbiter[toChain].holdFee * 10**18));
+        amountETH = toWei(parseFloat(multiply(subtract(amountETH, amountFee), random) / pow(10, 22)).toFixed(8).toString(), 'Ether') + orbiter[toChain].chainId;
+        
+        if (Number(amountETH) > add(orbiter.minAmount, orbiter[toChain].holdFee) * 10**18) {
+            if (fromChain == 'Starknet') {
+                await dataBridgeETHFromStarknet(amountETH, address).then(async(res) => {
+                    await sendStarknetTX(info.rpcStarknet, res, privateStarknet);
+                });
+            } else {
                 await getGasPrice(rpc).then(async(gasPrice) => {
                     gasPrice = parseFloat(gasPrice * 1.2).toFixed(4).toString();
-
-                    let gasLimit = fromChain == 'Arbitrum' ? await getEstimateGas(rpc, '0x', '100000', address) : 21000;
-                    gasLimit = fromChain == 'zkSyncEra' ? (await dataSendToken(rpc, info.ETH, orbiter.routerETH, '100000', address)).estimateGas : gasLimit;
-                    gasLimit = toChain == 'Starknet' ? (await bridgeETHToStarknet(rpc, '100000', toAddress, address)).estimateGas : gasLimit;
-                    gasLimit = parseInt(multiply(gasLimit, 1.2));
-
-                    const amountFee = parseInt(add(multiply(gasLimit, gasPrice * 10**9), orbiter[toChain].holdFee * 10**18));
-                    amountETH = toWei(parseFloat(multiply(subtract(amountETH, amountFee), random) / pow(10, 22)).toFixed(8).toString(), 'Ether') + orbiter[toChain].chainId;
-
-                    const data = toChain == 'Starknet' ? (await bridgeETHToStarknet(rpc, amountETH, toAddress, address)).encodeABI : null;
-                    if (Number(amountETH) > add(orbiter.minAmount, orbiter[toChain].holdFee) * 10**18) {
-                        const typeTX = fromChain == 'Optimism' || fromChain == 'BSC' ? 0 : 2;
-                        const bridgeOrbiter = toChain == 'Starknet' ? orbiter.routerToken : orbiter.routerETH;
-                        await sendEVMTX(rpc, typeTX, gasLimit, bridgeOrbiter, amountETH, data, privateKey, gasPrice, gasPrice);
-                        console.log(chalk.yellow(`Bridge ${parseFloat(amountETH / 10**18).toFixed(4)}ETH ${fromChain} -> ${toChain}`));
-                        logger.log(`Bridge ${parseFloat(amountETH / 10**18).toFixed(4)}ETH ${fromChain} -> ${toChain}`);
-                        isReady = true;
-                    } else {
-                        isReady = true;
-                        logger.log(`You can\'t send less than 0.005 + holdFee ${orbiter[toChain].holdFee} ETH`);
-                        console.log(chalk.gray(`You can\'t send less than 0.005 + holdFee ${orbiter[toChain].holdFee} ETH`));
-                    }
+                    
+                    const typeTX = fromChain == 'Optimism' || fromChain == 'BSC' ? 0 : 2;
+                    const bridgeOrbiter = toChain == 'Starknet' ? orbiter.routerToken : orbiter.routerETH;
+                    await sendEVMTX(rpc, typeTX, gasLimit, bridgeOrbiter, amountETH, data, privateKey, gasPrice, gasPrice);
                 });
-            });
-        } catch (err) {
-            logger.log(err);
-            console.log(err.message);
-            return;
+            }
+            console.log(chalk.yellow(`Bridge ${parseFloat(amountETH / 10**18).toFixed(4)}ETH ${fromChain} -> ${toChain}`));
+            logger.log(`Bridge ${parseFloat(amountETH / 10**18).toFixed(4)}ETH ${fromChain} -> ${toChain}`);
+        } else {
+            console.log(chalk.red(`You can\'t send less than 0.005 + holdFee ${orbiter[toChain].holdFee} ETH`));
+            logger.log(`You can\'t send less than 0.005 + holdFee ${orbiter[toChain].holdFee} ETH`);
         }
+    } catch (err) {
+        logger.log(err);
+        console.log(err.message);
+        return;
     }
 }
 
 (async() => {
     const wallet = parseFile('private.txt');
-    const walletStarknet = parseFile('addressStarknet.txt');
+    const walletStarknet = parseFile('privateStark.txt');
     const mainStage = [
         'ARBITRUM -> zKSYNC ERA',
         'ARBITRUM -> STARKNET',
         'ARBITRUM -> OPTIMISM',
         'zKSYNC ERA -> ARBITRUM',
         'OPTIMISM -> ARBITRUM',
+        'STARKNET -> ARBITRUM'
     ];
 
     const index = readline.keyInSelect(mainStage, 'Choose stage!');
@@ -95,6 +106,8 @@ const bridgeETHOrbiter = async(fromChain, toChain, privateKey, toAddress) => {
             await bridgeETHOrbiter('zkSyncEra', 'Arbitrum', wallet[i]);
         } else if (index == 4) {
             await bridgeETHOrbiter('Optimism', 'Arbitrum', wallet[i]);
+        } else if (index == 5) {
+            await bridgeETHOrbiter('Starknet', 'Arbitrum', wallet[i], walletStarknet[i]);
         }
 
         await timeout(pauseWalletTime);

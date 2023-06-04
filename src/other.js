@@ -8,11 +8,17 @@ export const info = {
     rpcArbitrum: `https://arbitrum-mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
     rpcOptimism: `https://optimism-mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
     rpczkSyncEra: 'https://mainnet.era.zksync.io',
+    rpcStarknet: `https://starknet-mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
     explorerEthereum: 'https://etherscan.io/tx/',
     explorerArbitrum: 'https://arbiscan.io/tx/',
     explorerOptimism: 'https://optimistic.etherscan.io/tx/',
     explorerzkSyncEra: 'https://explorer.zksync.io/tx/',
+    explorerStarknet: 'https://voyager.online/tx/',
     ETH: '0x0000000000000000000000000000000000000000',
+    Starknet: {
+        ETH: '0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7',
+        ETHAbi: '0x48624e084dc68d82076582219c7ed8cb0910c01746cca3cd72a28ecfe07e42d',
+    },
 }
 
 export const orbiter = {

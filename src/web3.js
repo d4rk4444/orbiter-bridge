@@ -21,9 +21,9 @@ export const getETHAmount = async(rpc, walletAddress) => {
     return data;
 }
 
-export const getEstimateGas = async(rpc, data, value, addressFrom) => {
+export const getEstimateGas = async(rpc, data, value, addressFrom, addressTo) => {
     const w3 = new Web3(new Web3.providers.HttpProvider(rpc));
-    return w3.eth.estimateGas({ data: data,  value: w3.utils.numberToHex(value), from: addressFrom });
+    return w3.eth.estimateGas({ data: data, value: w3.utils.numberToHex(value), from: addressFrom, to: addressTo });
 }
 
 export const dataSendToken = async (rpc, tokenAddress, toAddress, amount, fromAddress) => {

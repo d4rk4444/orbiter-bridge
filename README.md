@@ -22,12 +22,14 @@ key1
 key2
 ```
 
-In the file addressStarknet.txt insert Starknet addresses for ETH deposit:      
+In the file privateStark.txt insert private addresses in this format:      
 ```
-address1
-address2
+key1
+key2
 ```
-    
+
+*Starknet only works with ArgentX wallets!*     
+
 ## Launch
 ```
 node index
