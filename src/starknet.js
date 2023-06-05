@@ -89,3 +89,33 @@ export const dataBridgeETHFromStarknet = async(amountETH, toAddress) => {
 
     return payload;
 }
+
+export const estimateInvokeMaxFee = async(rpc, payload, privateKey) => {
+    const provider = new RpcProvider({ nodeUrl: rpc });
+    const starkKeyPair = ec.getKeyPair(privateKey);
+    const address = await privateToStarknetAddress(privateKey);
+    const account = new Account(provider, address, starkKeyPair);
+
+    const res = await account.estimateInvokeFee(payload);
+    return number.hexToDecimalString(uint256.bnToUint256(res.suggestedMaxFee).low);
+}
+
+export const estimateMsgFee = async(l2Recipient, amountDeposit) => {
+    const w3 = new Web3();
+    const provider = new SequencerProvider({
+        baseUrl: 'https://alpha-mainnet.starknet.io/',
+        feederGatewayUrl: 'feeder_gateway',
+        gatewayUrl: 'gateway',
+    });
+
+    const responseEstimateMessageFee = await provider.estimateMessageFee({
+        from_address: '0xae0ee0a63a2ce6baeeffe56e7714fb4efe48d419',
+        to_address: '0x073314940630fd6dcda0d772d4c972c4e0a9946bef9dabf4ef84eda8ef542b82',
+        entry_point_selector: "handle_deposit",
+        payload: [w3.utils.hexToNumberString(l2Recipient), amountDeposit, '0']
+    });
+
+    const msgFee = responseEstimateMessageFee.overall_fee;
+
+    return msgFee;
+}
