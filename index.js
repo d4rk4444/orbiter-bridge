@@ -43,7 +43,7 @@ const bridgeETHOrbiter = async(fromChain, toChain, privateKey, privateStarknet) 
         let gasPrice = fromChain == 'Starknet' ? null : parseFloat(await getGasPrice(rpc) * 1.2).toFixed(4).toString();
     
         const amountFee = fromChain == 'Starknet'
-            ? 0.0003 * 10**18
+            ? 0.0015 * 10**18
             : parseInt(add(multiply(gasLimit, gasPrice * 10**9), orbiter[toChain].holdFee * 10**18));
         amountETH = toWei(parseFloat(multiply(subtract(amountETH, amountFee), random) / pow(10, 22)).toFixed(8).toString(), 'Ether') + orbiter[toChain].chainId;
         
