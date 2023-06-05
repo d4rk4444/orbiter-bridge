@@ -54,9 +54,12 @@ const bridgeETHOrbiter = async(fromChain, toChain, privateKey, privateStarknet) 
             const bridgeOrbiter = toChain == 'Starknet' ? orbiter.routerToken : orbiter.routerETH;
             await sendEVMTX(rpc, typeTX, gasLimit, bridgeOrbiter, amountETH, data, privateKey, gasPrice, gasPrice);
         }
-        log('info', 'yellow', `Bridge ${parseFloat(amountETH / 10**18).toFixed(4)}ETH ${fromChain} -> ${toChain}`);
+        console.log(chalk.yellow(`Bridge ${parseFloat(amountETH / 10**18).toFixed(4)}ETH ${fromChain} -> ${toChain}`));
+        logger.log(`Bridge ${parseFloat(amountETH / 10**18).toFixed(4)}ETH ${fromChain} -> ${toChain}`);
     } else {
-        throw new Error(`You can\'t send less than 0.005 + holdFee ${orbiter[toChain].holdFee} + Chain Fee ${(amountFee/10**18).toFixed(4)} ETH`);
+        console.log(chalk.red(`You can\'t send less than 0.005 + holdFee ${orbiter[toChain].holdFee} + Chain Fee ${(amountFee/10**18).toFixed(4)} ETH`));
+        logger.log(`You can\'t send less than 0.005 + holdFee ${orbiter[toChain].holdFee} + Chain Fee ${(amountFee/10**18).toFixed(4)} ETH`);
+        return;
     }
 }
 
