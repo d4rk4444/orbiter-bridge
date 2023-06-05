@@ -10,7 +10,7 @@ export const bridgeETHToStarknet = async(rpc, amountETH, addressStarknet, addres
 
     const data = await contract.methods.transfer(
         orbiter.routerETH,
-        addressStarknet
+        '0x30' + (addressStarknet).slice(2)
     );
 
     const encodeABI = data.encodeABI();
