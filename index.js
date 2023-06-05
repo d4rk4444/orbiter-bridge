@@ -46,7 +46,7 @@ const bridgeETHOrbiter = async(fromChain, toChain, privateKey, privateStarknet) 
         : fromChain == 'Starknet' ? await dataBridgeETHFromStarknet(amountETH, address)
         : null;
     
-    if (Number(amountETH) > add(orbiter.minAmount, orbiter[toChain].holdFee) * 10**18) {
+    if (Number(amountETH) > add(add(orbiter.minAmount, orbiter[toChain].holdFee) * 10**18, amountFee)) {
         if (fromChain == 'Starknet') {
             await sendStarknetTX(rpc, data, privateStarknet);
         } else {

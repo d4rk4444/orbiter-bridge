@@ -77,6 +77,14 @@ export const getAmountTokenStark = async(rpc, walletAddress, tokenAddress, abiAd
 
 export const dataBridgeETHFromStarknet = async(amountETH, toAddress) => {
     const payload = [{
+        contractAddress: info.Starknet.ETH,
+        entrypoint: "approve",
+        calldata: stark.compileCalldata({
+            spender: '0x0173f81c529191726c6e7287e24626fe24760ac44dae2a1f7e02080230f8458b',
+            amount: {type: 'struct', low: info.approveAmount.toString(), high: '0'},
+        })
+    },
+    {
         contractAddress: '0x0173f81c529191726c6e7287e24626fe24760ac44dae2a1f7e02080230f8458b',
         entrypoint: "transferERC20",
         calldata: stark.compileCalldata({

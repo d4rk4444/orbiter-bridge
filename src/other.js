@@ -19,6 +19,7 @@ export const info = {
         ETH: '0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7',
         ETHAbi: '0x48624e084dc68d82076582219c7ed8cb0910c01746cca3cd72a28ecfe07e42d',
     },
+    approveAmount: '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
 }
 
 export const orbiter = {
