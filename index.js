@@ -22,26 +22,28 @@ consoleStamp(logger, { format: ':date(yyyy/mm/dd HH:MM:ss)', stdout: output });
 const bridgeETHOrbiter = async(fromChain, toChain, privateKey, privateStarknet) => {
     try {
         const address = privateToAddress(privateKey);
-        const addressStark = await privateToStarknetAddress(privateStarknet);
+        const addressStark = privateStarknet ? await privateToStarknetAddress(privateStarknet) : null;
         const random = generateRandomAmount(process.env.PERCENT_BRIDGE_MIN / 100, process.env.PERCENT_BRIDGE_MAX / 100, 3);
-
+    
         const rpc = info['rpc' + fromChain];
-
+    
         let amountETH = fromChain == 'Starknet'
             ? await getAmountTokenStark(info.rpcStarknet, addressStark, info.Starknet.ETH, info.Starknet.ETHAbi)
             : await getETHAmount(rpc, address);
-
+    
         const data = toChain == 'Starknet'
             ? (await bridgeETHToStarknet(rpc, amountETH, await privateToStarknetAddress(privateStarknet), address)).encodeABI
             : null;
-
+    
         let gasLimit = fromChain == 'Arbitrum' || fromChain == 'ArbitrumNova' ? await getEstimateGas(rpc, data, '100000', address, orbiter.routerETH)
             : fromChain == 'zkSyncEra' ? (await dataSendToken(rpc, info.ETH, orbiter.routerETH, '100000', address)).estimateGas
             : toChain == 'Starknet' ? (await bridgeETHToStarknet(rpc, '100000', await privateToStarknetAddress(privateStarknet), address)).estimateGas
             : 21000;
-
+        
+        let gasPrice = fromChain == 'Starknet' ? null : parseFloat(await getGasPrice(rpc) * 1.2).toFixed(4).toString();
+    
         const amountFee = fromChain == 'Starknet'
-            ? 0.00025 * 10**18
+            ? 0.0003 * 10**18
             : parseInt(add(multiply(gasLimit, gasPrice * 10**9), orbiter[toChain].holdFee * 10**18));
         amountETH = toWei(parseFloat(multiply(subtract(amountETH, amountFee), random) / pow(10, 22)).toFixed(8).toString(), 'Ether') + orbiter[toChain].chainId;
         
@@ -50,14 +52,10 @@ const bridgeETHOrbiter = async(fromChain, toChain, privateKey, privateStarknet) 
                 await dataBridgeETHFromStarknet(amountETH, address).then(async(res) => {
                     await sendStarknetTX(info.rpcStarknet, res, privateStarknet);
                 });
-            } else {
-                await getGasPrice(rpc).then(async(gasPrice) => {
-                    gasPrice = parseFloat(gasPrice * 1.2).toFixed(4).toString();
-                    
-                    const typeTX = fromChain == 'Optimism' || fromChain == 'BSC' ? 0 : 2;
-                    const bridgeOrbiter = toChain == 'Starknet' ? orbiter.routerToken : orbiter.routerETH;
-                    await sendEVMTX(rpc, typeTX, gasLimit, bridgeOrbiter, amountETH, data, privateKey, gasPrice, gasPrice);
-                });
+            } else {            
+                const typeTX = fromChain == 'Optimism' || fromChain == 'BSC' ? 0 : 2;
+                const bridgeOrbiter = toChain == 'Starknet' ? orbiter.routerToken : orbiter.routerETH;
+                await sendEVMTX(rpc, typeTX, gasLimit, bridgeOrbiter, amountETH, data, privateKey, gasPrice, gasPrice);
             }
             console.log(chalk.yellow(`Bridge ${parseFloat(amountETH / 10**18).toFixed(4)}ETH ${fromChain} -> ${toChain}`));
             logger.log(`Bridge ${parseFloat(amountETH / 10**18).toFixed(4)}ETH ${fromChain} -> ${toChain}`);
