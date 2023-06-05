@@ -105,6 +105,7 @@ const bridgeETHOrbiter = async(fromChain, toChain, privateKey, privateStarknet) 
         } else if (index == 4) {
             await bridgeETHOrbiter('Optimism', 'Arbitrum', wallet[i]);
         } else if (index == 5) {
+            console.log(chalk.blue(`Starknet ${i+1}: ${await privateToStarknetAddress(walletStarknet[i])}`));
             await bridgeETHOrbiter('Starknet', 'Arbitrum', wallet[i], walletStarknet[i]);
         }
 
