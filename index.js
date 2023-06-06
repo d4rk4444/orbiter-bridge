@@ -31,6 +31,10 @@ const bridgeETHOrbiter = async(fromChain, toChain, privateKey, privateStarknet) 
             ? await getAmountTokenStark(rpc, addressStark, info.Starknet.ETH, info.Starknet.ETHAbi)
             : await getETHAmount(rpc, address);
 
+        let data = toChain == 'Starknet' ? (await bridgeETHToStarknet(rpc, amountETH, await privateToStarknetAddress(privateStarknet), address)).encodeABI
+            : fromChain == 'Starknet' ? await dataBridgeETHFromStarknet(amountETH, address)
+            : null;
+
         let gasLimit = fromChain == 'Arbitrum' || fromChain == 'ArbitrumNova' ? await getEstimateGas(rpc, data, '100000', address, orbiter.routerETH)
             : fromChain == 'zkSyncEra' ? (await dataSendToken(rpc, info.ETH, orbiter.routerETH, '100000', address)).estimateGas
             : toChain == 'Starknet' ? (await bridgeETHToStarknet(rpc, '100000', await privateToStarknetAddress(privateStarknet), address)).estimateGas
@@ -43,9 +47,9 @@ const bridgeETHOrbiter = async(fromChain, toChain, privateKey, privateStarknet) 
             : parseInt(add(multiply(gasLimit, gasPrice * 10**9), orbiter[toChain].holdFee * 10**18));
         amountETH = toWei(parseFloat(multiply(subtract(amountETH, amountFee), random) / pow(10, 22)).toFixed(8).toString(), 'Ether') + orbiter[toChain].chainId;
 
-        const data = toChain == 'Starknet' ? (await bridgeETHToStarknet(rpc, amountETH, await privateToStarknetAddress(privateStarknet), address)).encodeABI
+        data = toChain == 'Starknet' ? (await bridgeETHToStarknet(rpc, amountETH, await privateToStarknetAddress(privateStarknet), address)).encodeABI
             : fromChain == 'Starknet' ? await dataBridgeETHFromStarknet(amountETH, address)
-            : null;
+            : data;
         
         if (Number(amountETH) > add(add(orbiter.minAmount, orbiter[toChain].holdFee) * 10**18, amountFee)) {
             if (fromChain == 'Starknet') {
