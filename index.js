@@ -53,7 +53,11 @@ const bridgeETHOrbiter = async(fromChain, toChain, privateKey, privateStarknet) 
         
         if (Number(amountETH) > add(add(orbiter.minAmount, orbiter[toChain].holdFee) * 10**18, amountFee)) {
             if (fromChain == 'Starknet') {
-                await sendStarknetTX(rpc, data, privateStarknet);
+                let isReady;
+                while (!isReady) {
+                    await sendStarknetTX(rpc, data, privateStarknet);
+                    isReady = true;
+                }
             } else {
                 const typeTX = fromChain == 'Optimism' || fromChain == 'BSC' ? 0 : 2;
                 const bridgeOrbiter = toChain == 'Starknet' ? orbiter.routerToken : orbiter.routerETH;
