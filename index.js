@@ -55,8 +55,10 @@ const bridgeETHOrbiter = async(fromChain, toChain, privateKey, privateStarknet) 
             if (fromChain == 'Starknet') {
                 let isReady;
                 while (!isReady) {
-                    await sendStarknetTX(rpc, data, privateStarknet);
-                    isReady = true;
+                    try {
+                        await sendStarknetTX(rpc, data, privateStarknet);
+                        isReady = true;
+                    } catch (err) { console.log(chalk.red(err.message)); }
                 }
             } else {
                 const typeTX = fromChain == 'Optimism' || fromChain == 'BSC' ? 0 : 2;
