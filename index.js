@@ -86,6 +86,7 @@ const bridgeETHOrbiter = async(fromChain, toChain, privateKey, privateStarknet) 
         'ARBITRUM -> STARKNET',
         'ARBITRUM -> OPTIMISM',
         'zKSYNC ERA -> ARBITRUM',
+        'zKSYNC ERA -> OPTIMISM',
         'OPTIMISM -> ARBITRUM',
         'STARKNET -> ARBITRUM'
     ];
@@ -111,8 +112,10 @@ const bridgeETHOrbiter = async(fromChain, toChain, privateKey, privateStarknet) 
         } else if (index == 3) {
             await bridgeETHOrbiter('zkSyncEra', 'Arbitrum', wallet[i]);
         } else if (index == 4) {
-            await bridgeETHOrbiter('Optimism', 'Arbitrum', wallet[i]);
+            await bridgeETHOrbiter('zkSyncEra', 'Optimism', wallet[i]);
         } else if (index == 5) {
+            await bridgeETHOrbiter('Optimism', 'Arbitrum', wallet[i]);
+        } else if (index == 6) {
             console.log(chalk.blue(`Starknet ${i+1}: ${await privateToStarknetAddress(walletStarknet[i])}`));
             await bridgeETHOrbiter('Starknet', 'Arbitrum', wallet[i], walletStarknet[i]);
         }
