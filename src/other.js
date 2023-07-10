@@ -9,11 +9,13 @@ export const info = {
     rpcOptimism: `https://optimism-mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
     rpczkSyncEra: 'https://mainnet.era.zksync.io',
     rpcStarknet: `https://starknet-mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
+    rpcArbitrumNova: `https://arbitrum-nova.publicnode.com`,
     explorerEthereum: 'https://etherscan.io/tx/',
     explorerArbitrum: 'https://arbiscan.io/tx/',
     explorerOptimism: 'https://optimistic.etherscan.io/tx/',
     explorerzkSyncEra: 'https://explorer.zksync.io/tx/',
     explorerStarknet: 'https://voyager.online/tx/',
+    explorerArbitrumNova: 'https://nova.arbiscan.io/tx/',
     ETH: '0x0000000000000000000000000000000000000000',
     Starknet: {
         ETH: '0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7',
@@ -41,7 +43,11 @@ export const orbiter = {
     Starknet: {
         chainId: '9004',
         holdFee: 0.0012,
-    }
+    },
+    ArbitrumNova: {
+        chainId: '9016',
+        holdFee: 0.0005,
+    },
 }
 
 export const timeout = ms => new Promise(res => setTimeout(res, ms));

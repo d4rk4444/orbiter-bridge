@@ -40,7 +40,7 @@ const bridgeETHOrbiter = async(fromChain, toChain, privateKey, privateStarknet) 
             : toChain == 'Starknet' ? (await bridgeETHToStarknet(rpc, '100000', await privateToStarknetAddress(privateStarknet), address)).estimateGas
             : 21000;
         
-        let gasPrice = fromChain == 'Starknet' ? null : parseFloat(await getGasPrice(rpc) * 1.2).toFixed(4).toString();
+        let gasPrice = fromChain == 'Starknet' ? null : parseFloat(await getGasPrice(rpc) * 1.2).toFixed(9).toString();
 
         const amountFee = fromChain == 'Starknet'
             ? await estimateInvokeMaxFee(rpc, await dataBridgeETHFromStarknet('10000000000', address), privateStarknet)
@@ -85,10 +85,12 @@ const bridgeETHOrbiter = async(fromChain, toChain, privateKey, privateStarknet) 
         'ARBITRUM -> zKSYNC ERA',
         'ARBITRUM -> STARKNET',
         'ARBITRUM -> OPTIMISM',
-        'zKSYNC ERA -> ARBITRUM',
-        'zKSYNC ERA -> OPTIMISM',
+        'zkSYNC ERA -> ARBITRUM',
+        'zkSYNC ERA -> OPTIMISM',
         'OPTIMISM -> ARBITRUM',
-        'STARKNET -> ARBITRUM'
+        'STARKNET -> ARBITRUM',
+        'zkSYNC ERA -> ARBITRUM NOVA',
+        'ARBITRUM NOVA -> zkSYNC ERA',
     ];
 
     const index = readline.keyInSelect(mainStage, 'Choose stage!');
@@ -118,6 +120,10 @@ const bridgeETHOrbiter = async(fromChain, toChain, privateKey, privateStarknet) 
         } else if (index == 6) {
             console.log(chalk.blue(`Starknet ${i+1}: ${await privateToStarknetAddress(walletStarknet[i])}`));
             await bridgeETHOrbiter('Starknet', 'Arbitrum', wallet[i], walletStarknet[i]);
+        } else if (index == 7) {
+            await bridgeETHOrbiter('zkSyncEra', 'ArbitrumNova', wallet[i]);
+        } else if (index == 8) {
+            await bridgeETHOrbiter('ArbitrumNova', 'zkSyncEra', wallet[i]);
         }
 
         await timeout(pauseWalletTime);
