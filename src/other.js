@@ -10,12 +10,14 @@ export const info = {
     rpczkSyncEra: 'https://mainnet.era.zksync.io',
     rpcStarknet: `https://starknet-mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
     rpcArbitrumNova: `https://arbitrum-nova.publicnode.com`,
+    rpcLinea: `https://linea-mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
     explorerEthereum: 'https://etherscan.io/tx/',
     explorerArbitrum: 'https://arbiscan.io/tx/',
     explorerOptimism: 'https://optimistic.etherscan.io/tx/',
     explorerzkSyncEra: 'https://explorer.zksync.io/tx/',
     explorerStarknet: 'https://voyager.online/tx/',
     explorerArbitrumNova: 'https://nova.arbiscan.io/tx/',
+    explorerLinea: 'https://lineascan.build/tx/',
     ETH: '0x0000000000000000000000000000000000000000',
     Starknet: {
         ETH: '0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7',
@@ -47,6 +49,10 @@ export const orbiter = {
     ArbitrumNova: {
         chainId: '9016',
         holdFee: 0.0005,
+    },
+    Linea: {
+        chainId: '9023',
+        holdFee: 0.001,
     },
 }
 

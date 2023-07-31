@@ -92,6 +92,9 @@ const bridgeETHOrbiter = async(fromChain, toChain, privateKey, privateStarknet) 
         'zkSYNC ERA -> ARBITRUM NOVA',
         'ARBITRUM NOVA -> zkSYNC ERA',
         'ARBITRUM NOVA -> ARBITRUM',
+        'ARBITRUM -> LINEA',
+        'zkSYNC ERA -> LINEA',
+        'LINEA -> ARBITRUM',
     ];
 
     const index = readline.keyInSelect(mainStage, 'Choose stage!');
@@ -127,6 +130,12 @@ const bridgeETHOrbiter = async(fromChain, toChain, privateKey, privateStarknet) 
             await bridgeETHOrbiter('ArbitrumNova', 'zkSyncEra', wallet[i]);
         } else if (index == 9) {
             await bridgeETHOrbiter('ArbitrumNova', 'Arbitrum', wallet[i]);
+        } else if (index == 10) {
+            await bridgeETHOrbiter('Arbitrum', 'Linea', wallet[i]);
+        } else if (index == 11) {
+            await bridgeETHOrbiter('zkSyncEra', 'Linea', wallet[i]);
+        } else if (index == 12) {
+            await bridgeETHOrbiter('Linea', 'Arbitrum', wallet[i]);
         }
 
         await timeout(pauseWalletTime);
