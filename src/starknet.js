@@ -2,7 +2,7 @@ import Web3 from 'web3';
 import { info, orbiter } from './other.js';
 import { bridgeAbi } from './abi.js';
 import chalk from 'chalk';
-import { Account, Contract, ec, json, stark, Provider, hash, number, uint256, SequencerProvider, RpcProvider } from 'starknet';
+import { Account, Contract, ec, json, stark, cairo, hash, number, uint256, SequencerProvider, RpcProvider, CallData } from 'starknet';
 
 export const bridgeETHToStarknet = async(rpc, amountETH, addressStarknet, addressFrom) => {
     const w3 = new Web3(new Web3.providers.HttpProvider(rpc));
@@ -24,8 +24,7 @@ export const privateToStarknetAddress = async(privateKey) => {
     const argentXproxyClassHash = "0x25ec026985a3bf9d0cc1fe17326b245dfdc3ff89b8fde106542a3ea56c5a918";
     const argentXaccountClassHash = "0x033434ad846cdd5f23eb73ff09fe6fddd568284a0fb7d1be20ee482f044dabe2";
 
-    const starkKeyPairAX = ec.getKeyPair(privateKey);
-    const starkKeyPubAX = ec.getStarkKey(starkKeyPairAX);
+    const starkKeyPubAX = ec.starkCurve.getStarkKey(privateKey);
 
     // Calculate future address of the ArgentX account
     const AXproxyConstructorCallData = stark.compileCalldata({
@@ -47,9 +46,8 @@ export const privateToStarknetAddress = async(privateKey) => {
 
 export const sendStarknetTX = async(rpc, payload, privateKey) => {
     const provider = new RpcProvider({ nodeUrl: rpc });
-    const starkKeyPair = ec.getKeyPair(privateKey);
     const address = await privateToStarknetAddress(privateKey);
-    const account = new Account(provider, address, starkKeyPair);
+    const account = new Account(provider, address, privateKey);
 
     try {
         const executeHash = await account.execute(payload);
@@ -79,18 +77,18 @@ export const dataBridgeETHFromStarknet = async(amountETH, toAddress) => {
     const payload = [{
         contractAddress: info.Starknet.ETH,
         entrypoint: "approve",
-        calldata: stark.compileCalldata({
+        calldata: CallData.compile({
             spender: '0x0173f81c529191726c6e7287e24626fe24760ac44dae2a1f7e02080230f8458b',
-            amount: {type: 'struct', low: amountETH.toString(), high: '0'},
+            amount: cairo.uint256(amountETH),
         })
     },
     {
         contractAddress: '0x0173f81c529191726c6e7287e24626fe24760ac44dae2a1f7e02080230f8458b',
         entrypoint: "transferERC20",
-        calldata: stark.compileCalldata({
+        calldata: CallData.compile({
             _token: info.Starknet.ETH,
             _to: '0x07b393627bd514d2aa4c83e9f0c468939df15ea3c29980cd8e7be3ec847795f0',
-            _amount: {type: 'struct', low: amountETH.toString(), high: '0'},
+            _amount: cairo.uint256(amountETH),
             _ext: toAddress
         })
     }];
@@ -100,9 +98,8 @@ export const dataBridgeETHFromStarknet = async(amountETH, toAddress) => {
 
 export const estimateInvokeMaxFee = async(rpc, payload, privateKey) => {
     const provider = new RpcProvider({ nodeUrl: rpc });
-    const starkKeyPair = ec.getKeyPair(privateKey);
     const address = await privateToStarknetAddress(privateKey);
-    const account = new Account(provider, address, starkKeyPair);
+    const account = new Account(provider, address, privateKey);
 
     const res = await account.estimateInvokeFee(payload);
     return number.hexToDecimalString(uint256.bnToUint256(res.suggestedMaxFee).low);
