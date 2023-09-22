@@ -27,10 +27,10 @@ export const privateToStarknetAddress = async(privateKey) => {
     const starkKeyPubAX = ec.starkCurve.getStarkKey(privateKey);
 
     // Calculate future address of the ArgentX account
-    const AXproxyConstructorCallData = stark.compileCalldata({
+    const AXproxyConstructorCallData = CallData.compile({
         implementation: argentXaccountClassHash,
         selector: hash.getSelectorFromName("initialize"),
-        calldata: stark.compileCalldata({ signer: starkKeyPubAX, guardian: "0" }),
+        calldata: CallData.compile({ signer: starkKeyPubAX, guardian: "0" }),
     });
 
     let AXcontractAddress = hash.calculateContractAddressFromHash(
@@ -47,7 +47,7 @@ export const privateToStarknetAddress = async(privateKey) => {
 export const sendStarknetTX = async(rpc, payload, privateKey) => {
     const provider = new RpcProvider({ nodeUrl: rpc });
     const address = await privateToStarknetAddress(privateKey);
-    const account = new Account(provider, address, privateKey);
+    const account = new Account(provider, address, privateKey, '1');
 
     try {
         const executeHash = await account.execute(payload);
@@ -70,7 +70,7 @@ export const getAmountTokenStark = async(rpc, walletAddress, tokenAddress, abiAd
     const contract = new Contract(abi, tokenAddress, provider);
     const balance = await contract.balanceOf(walletAddress);
 
-    return w3.utils.hexToNumberString(uint256.bnToUint256(balance[0].low).low);
+    return cairo.uint256(balance.balance.low).low;
 }
 
 export const dataBridgeETHFromStarknet = async(amountETH, toAddress) => {
@@ -99,10 +99,10 @@ export const dataBridgeETHFromStarknet = async(amountETH, toAddress) => {
 export const estimateInvokeMaxFee = async(rpc, payload, privateKey) => {
     const provider = new RpcProvider({ nodeUrl: rpc });
     const address = await privateToStarknetAddress(privateKey);
-    const account = new Account(provider, address, privateKey);
+    const account = new Account(provider, address, privateKey, '1');
 
     const res = await account.estimateInvokeFee(payload);
-    return number.hexToDecimalString(uint256.bnToUint256(res.suggestedMaxFee).low);
+    return cairo.uint256(res.suggestedMaxFee).low;
 }
 
 export const estimateMsgFee = async(l2Recipient, amountDeposit) => {
